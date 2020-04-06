@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "resk/infra"
 
+func main() {
+	infra.SystemRun()
 }
