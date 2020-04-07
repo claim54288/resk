@@ -1,7 +1,7 @@
 package base
 
 import (
-	"github.com/tietang/props/ini"
+	"fmt"
 	"github.com/tietang/props/kvs"
 	"resk/infra"
 )
@@ -17,5 +17,6 @@ type PropsStarter struct {
 }
 
 func (p *PropsStarter) Init(ctx infra.StarterContext) {
-	props = ini.NewIniFileConfigSource("config.ini")
+	props = ctx.Props()
+	fmt.Println("初始化配置")
 }

@@ -3,7 +3,7 @@ package infra
 import "fmt"
 
 func init() {
-	Register(&ConfStarter{})
+	//Register(&ConfStarter{})
 }
 
 type ConfStarter struct {
