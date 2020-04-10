@@ -26,8 +26,8 @@ func init() {
 	//控制台高亮显示
 	formatter.ForceColors = true
 	formatter.DisableColors = false
-	log.Info("测试info")
-	log.Debug("测试debug")
+	//log.Info("测试info")
+	//log.Debug("测试debug")
 	//日志文件和滚动配置 (本身没有，通过第三方实现)
 	//github.com/lestrrat/go-file-rotatelogs
 	//

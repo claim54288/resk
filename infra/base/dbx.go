@@ -1,17 +1,19 @@
 package base
 
 import (
+	"resk/infra"
+	"resk/infra/logrus"
+
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/tietang/dbx"
 	"github.com/tietang/props/kvs"
-	"resk/infra"
 )
 
 //dbx 数据库实例
 var database *dbx.Database
 
-func DbxDataBase() *dbx.Database {
+func DbxDatabase() *dbx.Database {
 	return database
 }
 
@@ -23,15 +25,23 @@ type DbxDatabaseStarter struct {
 func (s *DbxDatabaseStarter) Setup(ctx infra.StarterContext) {
 	conf := ctx.Props()
 	//数据库配置
-	settings := dbx.Settings{}
+	settings := dbx.Settings{
+		Options: map[string]string{
+			"charset":   "utf8",
+			"parseTime": "true",
+			"loc":       "Local",
+		},
+	}
 	err := kvs.Unmarshal(conf, &settings, "mysql")
 	if err != nil {
 		panic(err)
 	}
-	dbx2, err := dbx.Open(settings)
+	log.Info("mysql.conn url:", settings.ShortDataSourceName())
+	db, err := dbx.Open(settings)
 	if err != nil {
 		panic(err)
 	}
-	logrus.Info(dbx2.Ping())
-	database = dbx2
+	log.Info(db.Ping())
+	db.SetLogger(logrus.NewUpperLogrusLogger())
+	database = db
 }
