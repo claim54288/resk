@@ -14,6 +14,7 @@ import (
 var database *dbx.Database
 
 func DbxDatabase() *dbx.Database {
+	Check(database)
 	return database
 }
 
@@ -25,13 +26,7 @@ type DbxDatabaseStarter struct {
 func (s *DbxDatabaseStarter) Setup(ctx infra.StarterContext) {
 	conf := ctx.Props()
 	//数据库配置
-	settings := dbx.Settings{
-		Options: map[string]string{
-			"charset":   "utf8",
-			"parseTime": "true",
-			"loc":       "Local",
-		},
-	}
+	settings := dbx.Settings{}
 	err := kvs.Unmarshal(conf, &settings, "mysql")
 	if err != nil {
 		panic(err)

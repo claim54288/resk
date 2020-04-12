@@ -1,17 +1,19 @@
 package base
 
 import (
+	"resk/infra"
+	"time"
+
 	"github.com/kataras/iris"
 	"github.com/kataras/iris/middleware/logger"
 	irisrecover "github.com/kataras/iris/middleware/recover"
 	"github.com/sirupsen/logrus"
-	"resk/infra"
-	"time"
 )
 
 var irisApplication *iris.Application
 
 func Iris() *iris.Application {
+	Check(irisApplication)
 	return irisApplication
 }
 
@@ -28,6 +30,9 @@ func (i *IrisServerStarter) Init(ctx infra.StarterContext) {
 }
 
 func (i *IrisServerStarter) Start(ctx infra.StarterContext) {
+	//和logrus日志级别保持一致
+	Iris().Logger().SetLevel(ctx.Props().GetDefault("log.level", "info"))
+
 	//把路由信息打印到控制台
 	routers := Iris().GetRoutes()
 	for _, r := range routers {

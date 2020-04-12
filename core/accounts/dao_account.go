@@ -50,17 +50,12 @@ func (dao *AccountDao) Insert(a *Account) (id int64, err error) {
 
 //账户余额的更新
 //amount 如果是负数，就是扣减；如果是正数，就是增加
-func (dao *AccountDao) UpdateBalance(
-	accountNo string,
-	amount decimal.Decimal) (rows int64, err error) {
+func (dao *AccountDao) UpdateBalance(accountNo string, amount decimal.Decimal) (rows int64, err error) {
 	sql := "update account " +
 		" set balance=balance+CAST(? AS DECIMAL(30,6))" +
 		" where account_no=? " +
 		" and balance>=-1*CAST(? AS DECIMAL(30,6)) "
-	rs, err := dao.runner.Exec(sql,
-		amount.String(),
-		accountNo,
-		amount.String())
+	rs, err := dao.runner.Exec(sql, amount.String(), accountNo, amount.String())
 	if err != nil {
 		return 0, err
 	}

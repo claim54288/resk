@@ -1,22 +1,25 @@
 package base
 
 import (
+	"gopkg.in/go-playground/validator.v9"
+	"resk/infra"
+
 	"github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
-	"github.com/sirupsen/logrus"
-	"gopkg.in/go-playground/validator.v9"
+	log "github.com/sirupsen/logrus"
 	vtzh "gopkg.in/go-playground/validator.v9/translations/zh"
-	"resk/infra"
 )
 
 var validate *validator.Validate
 var translator ut.Translator
 
 func Validate() *validator.Validate {
+	Check(validate)
 	return validate
 }
 
 func Translate() ut.Translator {
+	Check(translator)
 	return translator
 }
 
@@ -34,9 +37,27 @@ func (v *ValidatorStarter) Init(ctx infra.StarterContext) {
 	if found { //表示是否可以找到翻译器
 		err := vtzh.RegisterDefaultTranslations(validate, translator)
 		if err != nil {
-			logrus.Error(err)
+			log.Error(err)
 		}
 	} else {
-		logrus.Error("Not found translator:zh")
+		log.Error("Not found translator:zh")
 	}
+}
+
+func ValidateStruct(s interface{}) (err error) {
+	//验证
+	err = Validate().Struct(s)
+	if err != nil {
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			log.Error(err)
+		}
+		errs, ok := err.(validator.ValidationErrors)
+		if ok {
+			for _, err := range errs {
+				log.Error(err.Translate(translator))
+			}
+		}
+		return err
+	}
+	return nil
 }
