@@ -3,6 +3,8 @@ package accounts
 import (
 	"errors"
 	"github.com/segmentio/ksuid"
+	"github.com/shopspring/decimal"
+	"github.com/sirupsen/logrus"
 	"github.com/tietang/dbx"
 	"resk/infra/base"
 	"resk/services"
@@ -23,7 +25,7 @@ func (domain *accountDomain) createAccountLogNo() {
 
 //创建流水No logNo
 func (domain *accountDomain) createAccountNo() {
-	domain.accountLog.AccountNo = ksuid.New().Next().String()
+	domain.account.AccountNo = ksuid.New().Next().String()
 }
 
 //生成账户No accountNo
@@ -84,4 +86,128 @@ func (domain *accountDomain) Create(dto services.AccountDTO) (*services.AccountD
 	})
 	rdto = domain.account.ToDTO()
 	return rdto, err
+}
+
+func (a *accountDomain) Transfer(dto services.AccountTransferDTO) (status services.TransferedStatus, err error) {
+	//如果交易变化是支出，修正amount
+	amount := dto.Amount
+	if dto.ChangeFlag == services.FlagTransferOut {
+		amount = dto.Amount.Mul(decimal.NewFromFloat(-1))
+	}
+
+	//创建账户流水记录
+	a.accountLog = AccountLog{}
+	a.accountLog.FromTransferDTO(&dto)
+	a.createAccountLogNo()
+	//检查余额是否足够和更新余额，通过乐观锁验证
+
+	//更新成功后，写入流水记录
+	err = base.Tx(func(runner *dbx.TxRunner) error {
+		accountDao := AccountDao{runner: runner}
+		accountLogDao := AccountLogDao{runner: runner}
+
+		rows, err := accountDao.UpdateBalance(dto.TradeBody.AccountNo, amount)
+		if err != nil {
+			status = services.TransferedStatusFailure
+			return err
+		}
+		if rows <= 0 && dto.ChangeFlag == services.FlagTransferOut {
+			status = services.TransferedStatusSufficientFunds
+			return errors.New("余额不足")
+		}
+		account := accountDao.GetOne(dto.TradeBody.AccountNo)
+		if account == nil {
+			return errors.New("账户出错")
+		}
+		a.account = *account
+		a.accountLog.Balance = a.account.Balance
+		id, err := accountLogDao.Insert(&a.accountLog)
+		if err != nil || id <= 0 {
+			status = services.TransferedStatusFailure
+			return errors.New("账户流水创建失败")
+		}
+		return nil
+	})
+	if err != nil {
+		logrus.Error(err)
+	}
+	status = services.TransferedStatusSuccess
+	return status, err
+}
+
+//根据账户编号来查询账户信息
+func (a *accountDomain) GetAccount(accountNo string) *services.AccountDTO {
+	accountDao := AccountDao{}
+	var account *Account
+
+	err := base.Tx(func(runner *dbx.TxRunner) error {
+		accountDao.runner = runner
+		account = accountDao.GetOne(accountNo)
+		return nil
+	})
+	if err != nil {
+		return nil
+	}
+	if account == nil {
+		return nil
+	}
+	return account.ToDTO()
+}
+
+//根据用户ID来查询红包账户信息
+func (a *accountDomain) GetEnvelopeAccountByUserId(userId string) *services.AccountDTO {
+	accountDao := AccountDao{}
+	var account *Account
+
+	err := base.Tx(func(runner *dbx.TxRunner) error {
+		accountDao.runner = runner
+		account = accountDao.GetByUserId(userId, int(services.EnvelopeAccountType))
+		return nil
+	})
+	if err != nil {
+		return nil
+	}
+	if account == nil {
+		return nil
+	}
+	return account.ToDTO()
+
+}
+
+//根据流水ID来查询账户流水
+func (a *accountDomain) GetAccountLog(logNo string) *services.AccountLogDTO {
+	dao := AccountLogDao{}
+	var log *AccountLog
+	err := base.Tx(func(runner *dbx.TxRunner) error {
+		dao.runner = runner
+		log = dao.GetOne(logNo)
+		return nil
+	})
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	if log == nil {
+		return nil
+	}
+	return log.ToDTO()
+}
+
+//根据交易编号来查询账户流水
+func (a *accountDomain) GetAccountLogByTradeNo(tradeNo string) *services.AccountLogDTO {
+	dao := AccountLogDao{}
+	var log *AccountLog
+	err := base.Tx(func(runner *dbx.TxRunner) error {
+		dao.runner = runner
+		log = dao.GetByTradeNo(tradeNo)
+		return nil
+	})
+	if err != nil {
+		logrus.Error(err)
+		return nil
+	}
+	if log == nil {
+		return nil
+	}
+	return log.ToDTO()
 }

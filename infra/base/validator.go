@@ -28,7 +28,7 @@ type ValidatorStarter struct {
 }
 
 func (v *ValidatorStarter) Init(ctx infra.StarterContext) {
-	validate := validator.New()
+	validate = validator.New()
 	//创建消息国际化通用翻译器
 	cn := zh.New()
 	uni := ut.New(cn, cn) //通过通用翻译器来转化，接收fallback和本地化翻译器 两个参数

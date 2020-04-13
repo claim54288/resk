@@ -64,9 +64,7 @@ func (dao *AccountDao) UpdateBalance(accountNo string, amount decimal.Decimal) (
 
 //账户状态更新
 
-func (dao *AccountDao) UpdateStatus(
-	accountNo string,
-	status int) (rows int64, err error) {
+func (dao *AccountDao) UpdateStatus(accountNo string, status int) (rows int64, err error) {
 	sql := "update account set status=? " +
 		" where account_no=? "
 	rs, err := dao.runner.Exec(sql, status, accountNo)

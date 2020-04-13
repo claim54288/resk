@@ -5,9 +5,9 @@ type TransferedStatus int8
 
 const (
 	//转账失败
-	TansferedStatusFailure TransferedStatus = -1
+	TransferedStatusFailure TransferedStatus = -1
 	//余额不足
-	TransferdStatusSufficientFunds TransferedStatus = 0
+	TransferedStatusSufficientFunds TransferedStatus = 0
 	//转账成功
 	TransferedStatusSuccess TransferedStatus = 1
 )
@@ -38,4 +38,12 @@ const (
 	FlagTransferOut ChangeFlag = -1
 	//收入=1
 	FlagTransferIn ChangeFlag = 1
+)
+
+//账户类型
+type AccountType int8
+
+const (
+	EnvelopeAccountType       AccountType = 1
+	SystemEnvelopeAccountType AccountType = 2
 )
