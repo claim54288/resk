@@ -6,11 +6,19 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+var IAccountService AccountService
+
+//用于对外暴露账户应用服务，唯一的暴露点
+func GetAccountService() AccountService {
+	return IAccountService
+}
+
 type AccountService interface {
 	CreateAccount(dto AccountCreatedDTO) (*AccountDTO, error)
 	Transfer(dto AccountTransferDTO) (TransferedStatus, error)
 	StoreValue(dto AccountTransferDTO) (TransferedStatus, error)
 	GetEnvelopeAccountByUserId(userId string) *AccountDTO
+	GetAccount(accountNo string) *AccountDTO
 }
 
 //账户创建对象

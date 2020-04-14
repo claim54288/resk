@@ -8,10 +8,18 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 	"resk/infra/base"
 	"resk/services"
+	"sync"
 )
 
-type accountService struct {
+var once sync.Once
+
+func init() {
+	once.Do(func() {
+		services.IAccountService = new(accountService)
+	})
 }
+
+type accountService struct{}
 
 func (a *accountService) CreateAccount(dto services.AccountCreatedDTO) (*services.AccountDTO, error) {
 	domain := accountDomain{}
@@ -50,18 +58,7 @@ func (a *accountService) Transfer(dto services.AccountTransferDTO) (services.Tra
 	//验证参数
 	domain := accountDomain{}
 	//验证输入参数
-	err := base.Validate().Struct(&dto)
-	if err != nil {
-		_, ok := err.(*validator.InvalidValidationError)
-		if ok {
-			logrus.Error("验证错误", err)
-		}
-		errs, ok := err.(validator.ValidationErrors)
-		if ok {
-			for _, e := range errs {
-				logrus.Error(e.Translate(base.Translate()))
-			}
-		}
+	if err := base.ValidateStruct(&dto); err != nil {
 		return services.TransferedStatusFailure, err
 	}
 	//执行转账逻辑
