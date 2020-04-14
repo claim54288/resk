@@ -36,7 +36,7 @@ func (s *DbxDatabaseStarter) Setup(ctx infra.StarterContext) {
 	if err != nil {
 		panic(err)
 	}
-	log.Info(db.Ping())
+	log.Info("db conn err :", db.Ping())
 	db.SetLogger(logrus.NewUpperLogrusLogger())
 	database = db
 }
