@@ -8,6 +8,7 @@ import (
 	_ "resk/core/envelopes"
 	"resk/infra"
 	"resk/infra/base"
+	"resk/jobs"
 )
 
 //进度：6-12
@@ -18,6 +19,7 @@ func init() {
 	infra.Register(&base.ValidatorStarter{})   //验证器
 	infra.Register(&base.GoRPCStarter{})       //RPC
 	infra.Register(&gorpc.GoRpcApiStarter{})
+	infra.Register(&jobs.RefundExpiredJobStarter{})
 	infra.Register(&base.IrisServerStarter{}) //网络
 	infra.Register(&infra.WebApiSterter{})    //web接口
 }

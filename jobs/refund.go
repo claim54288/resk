@@ -54,7 +54,6 @@ func (r *RefundExpiredJobStarter) Start(ctx infra.StarterContext) {
 	go func() {
 		for {
 			c := <-r.ticker.C
-
 			err := r.mutex.Lock()
 			if err == nil {
 				log.Debug("过期红包退款开始...", c)
